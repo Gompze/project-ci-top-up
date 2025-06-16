@@ -1,9 +1,9 @@
-<!-- app/Views/auth/login.php -->
+
 <div class="row justify-content-center">
   <div class="col-md-6">
     <h3 class="mb-4 text-white">Login</h3>
 
-    <!-- Tampilkan pesan error jika ada -->
+    
     <?php if (session()->getFlashdata('error')): ?>
       <div class="alert alert-danger">
         <?= session()->getFlashdata('error') ?>

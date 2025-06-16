@@ -6,16 +6,13 @@ use CodeIgniter\Model;
 
 class TransactionModel extends Model
 {
-    // Nama tabel dan primary key
     protected $table      = 'transactions';
     protected $primaryKey = 'id';
 
-    // Aktifkan timestamp otomatis
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
 
-    // Kolom mana saja yang boleh di‐insert/update
     protected $allowedFields = [
         'user_id',
         'total_price',
@@ -25,11 +22,32 @@ class TransactionModel extends Model
         'bank',
         'zone_id',
         'email',
+        'bukti_transfer'  
     ];
-    public function getByUser($userId)
-    {
-        return $this->where('user_id', $userId)
-                    ->orderBy('created_at', 'DESC')
-                    ->findAll();
-    }
+
+  public function getByUserWithItemsFlat($userId)
+{
+    return $this->db->table('transactions')
+     ->select('
+    transactions.id as transaction_id,
+    transactions.user_id,
+    transactions.zone_id,
+    transactions.total_price,
+    transactions.bank,
+    transaction_items.game as game,
+    transaction_items.quantity,
+    transaction_items.subtotal
+')
+
+
+        ->join('transaction_items', 'transaction_items.transaction_id = transactions.id')
+        ->where('transactions.user_id', $userId)
+        // ⬇️ Tambahkan pengurutan supaya yang bank-nya isi muncul lebih dulu
+        ->orderBy('transactions.id', 'DESC')
+        ->orderBy('transactions.bank IS NULL', 'ASC', false) // ini penting
+        ->get()
+        ->getResultArray();
+}
+
+
 }

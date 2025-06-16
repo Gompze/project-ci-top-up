@@ -7,6 +7,7 @@ use App\Models\ProductModel;
 use App\Models\TransactionModel;
 use App\Models\TransactionItemModel;
 use CodeIgniter\Controller;
+use App\Controllers\TopupController;
 
 class CartController extends Controller
 {
@@ -15,119 +16,170 @@ class CartController extends Controller
     protected $productModel;
     protected $transactionModel;
     protected $txnItemModel;
-
+    protected $topupController;
+    
+    
+    protected $helpers = ['url', 'form'];
+    
     public function __construct()
     {
-        $this->session = session();
-        $this->cartModel = new CartModel();
-        $this->productModel = new ProductModel();
+        $this->session          = session();
+        $this->cartModel        = new CartModel();
+        $this->productModel     = new ProductModel();
         $this->transactionModel = new TransactionModel();
-        $this->txnItemModel = new TransactionItemModel();
-
-        // Cek jika belum login → redirect ke /login
-        if (! $this->session->get('isLoggedIn')) {
-            return redirect()->to('/login');
-        }
+        $this->txnItemModel     = new TransactionItemModel();
+        $this->topupController   = new TopupController();
     }
-
+    
+    
     public function index()
     {
-        $userId = $this->session->get('id');
-        $carts  = $this->cartModel->getCartByUser($userId);
-
-        $total = 0;
-        foreach ($carts as $item) {
-            $total += ($item['price'] * $item['quantity']);
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
         }
-
+        
+        $userId = session()->get('id');
+        $carts  = $this->cartModel->getCartByUser($userId);
+        
+        
+        if (empty($carts)) {
+            session()->setFlashdata('error', 'Keranjang kosong.');
+            $data = [
+                'carts' => [],
+                'total' => 0
+            ];
+            echo view('templates/header', $data);
+            echo view('cart/index', $data);
+            echo view('templates/footer');
+            return;
+        }
+        
+        
+        $totalAll = array_reduce($carts, fn($sum, $item) => $sum + ($item['diamond_price'] * $item['quantity']), 0);
+        
+        
         $data = [
             'carts' => $carts,
-            'total' => $total
+            'total' => $totalAll
         ];
+        
         echo view('templates/header', $data);
         echo view('cart/index', $data);
         echo view('templates/footer');
     }
-
+    
+    
+    
+    
+    
     public function add()
     {
-        $userId    = $this->session->get('id');
-        $productId = $this->request->getPost('product_id');
-        $qty       = (int) $this->request->getPost('quantity');
-
-        // Cek apakah produk sudah ada di keranjang → update atau save baru
+        if (! session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+        
+        $userId        = session()->get('id');
+        $game          = $this->request->getPost('game');
+        $zoneId        = $this->request->getPost('zone_id');
+        $diamondAmt    = (int)$this->request->getPost('diamond_amount');
+        $itemName = $this->request->getPost('item_name'); 
+        $price         = (int)$this->request->getPost('diamond_price');
+        $paymentMethod = $this->request->getPost('payment_method');
+        $email         = $this->request->getPost('email');
+        $qty           = max(1, (int)$this->request->getPost('quantity'));
+        
+        
         $existing = $this->cartModel
-                         ->where('user_id', $userId)
-                         ->where('product_id', $productId)
-                         ->first();
-
+        ->where('user_id', $userId)
+        ->where('game', $game)
+        ->where('diamond_amount', $diamondAmt)
+        ->where('item_name', $itemName) 
+        ->where('diamond_price', $price)
+        ->where('payment_method', $paymentMethod)
+        ->first();
+        
         if ($existing) {
-            $newQty = $existing['quantity'] + $qty;
-            $this->cartModel->update($existing['id'], ['quantity' => $newQty]);
+            
+            $this->cartModel->update($existing['id'], [
+                'quantity' => $existing['quantity'] + $qty
+            ]);
         } else {
+            
             $this->cartModel->save([
-                'user_id'    => $userId,
-                'product_id' => $productId,
-                'quantity'   => $qty
+                'user_id'        => $userId,
+                'game'           => $game,
+                'zone_id'        => $zoneId,
+                'diamond_amount' => $diamondAmt,
+                'diamond_price'  => $price,
+                'payment_method' => $paymentMethod,
+                'email'          => $email,
+                'quantity'       => $qty,
+                'item_name'      => $itemName,
             ]);
         }
-
-        return redirect()->to('/cart');
+        $this->updateCartTotalSession();
+        return redirect()->to('/cart')
+        ->with('success','Berhasil tambah ke keranjang.');
     }
-
     public function update($cartId)
     {
         $qty = (int) $this->request->getPost('quantity');
         if ($qty < 1) {
-            // hapus item jika quantity < 1
             $this->cartModel->delete($cartId);
         } else {
             $this->cartModel->update($cartId, ['quantity' => $qty]);
         }
+        $this->updateCartTotalSession();
         return redirect()->to('/cart');
     }
-
+    private function updateCartTotalSession()
+    {
+        $userId = session()->get('id');
+        $carts = $this->cartModel->getCartByUser($userId);
+        $totalQty = 0;
+        
+        foreach ($carts as $item) {
+            $totalQty += $item['quantity'];
+        }
+        
+        session()->set('cart_total', $totalQty);
+    }
+    
+    
+    
     public function checkout()
     {
-        $userId = $this->session->get('id');
+        if (! session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+        
+        $userId = session()->get('id');
         $carts  = $this->cartModel->getCartByUser($userId);
-
+        
         if (empty($carts)) {
-            $this->session->setFlashdata('error', 'Keranjang kosong.');
+            session()->setFlashdata('error', 'Keranjang kosong.');
             return redirect()->to('/cart');
         }
-
-        // Hitung total
-        $totalAll = 0;
+        
+        $totalAll = array_reduce($carts, fn($sum, $item) => $sum + ($item['diamond_price'] * $item['quantity']), 0);
+        
+        $bank = '';
         foreach ($carts as $item) {
-            $totalAll += ($item['price'] * $item['quantity']);
+            if (!empty($item['payment_method'])) {
+                $bank = $item['payment_method'];
+                break; // ambil yang pertama ditemukan
+            }
         }
+        
 
-        // Simpan header transaksi (langsung status = 'paid' untuk demo)
-        $txnId = $this->transactionModel->insert([
-            'user_id'     => $userId,
-            'game'        => $item['game'],         // jika tiap transaksi hanya 1 item, bisa ambil game dari $item
-            'diamond_amount' => $item['diamond'],   // jika produk menyimpan field 'diamond'
-            'total_price' => $totalAll,
-            'bank'        => 'CartCheckout',       // contoh, atau simpan metode pembayaran lain
-            'status'      => 'paid',
-        ]);
+        $data = [
+            'carts' => $carts,
+            'total' => $totalAll,
+            'bank' => $bank,
+            'user_id' => $userId,
+        ];
 
-        // Simpan detail tiap item
-        foreach ($carts as $item) {
-            $this->txnItemModel->insert([
-                'transaction_id' => $txnId,
-                'product_id'     => $item['product_id'],
-                'quantity'       => $item['quantity'],
-                'price_each'     => $item['price'],
-                'subtotal'       => $item['price'] * $item['quantity'],
-            ]);
-        }
-
-        // Bersihkan keranjang
-        $this->cartModel->where('user_id', $userId)->delete();
-
-        $this->session->setFlashdata('success', 'Pembayaran berhasil. Terima kasih!');
-        return redirect()->to('/transactions');
+        return $this->topupController->confirmTransfer($data);
+        
     }
 }

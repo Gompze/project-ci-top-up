@@ -2,8 +2,16 @@
 
 body {
   font-family: 'Montserrat', sans-serif;
-  background-color: #1A0E3A; /* mirip latar ungu Codashop */
+  background-color: #1A0E3A;
   color: #fff;
+}
+
+footer h5 {
+  color: #FF0066;
+}
+
+footer hr {
+  border-color: rgba(255,255,255,0.2);
 }
 
 /* Game Card */

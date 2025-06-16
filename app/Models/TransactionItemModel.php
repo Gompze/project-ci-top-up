@@ -9,7 +9,7 @@ class TransactionItemModel extends Model
     protected $table      = 'transaction_items';
     protected $primaryKey = 'id';
     protected $useTimestamps = true;
-    protected $allowedFields = ['transaction_id','product_id','quantity','price_each','subtotal'];
+    protected $allowedFields = ['transaction_id','product_id','quantity','price_each','subtotal', 'game'];
 
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';

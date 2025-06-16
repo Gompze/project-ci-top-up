@@ -1,40 +1,41 @@
-<!-- app/Views/templates/footer.php -->
+    </div> <!-- /.container -->
+  </main>
 
-  </div> <!-- Tutup .container dari header.php -->
-
-  <!-- ===== Contact Us Footer (disederhanakan) ===== -->
-  <div class="footer">
-    <!-- Kolom Bantuan: Hanya nomor telepon -->
-    <div class="footer-column">
-      <h3>Butuh Bantuan?</h3>
-      <p>
-        <strong>Telp:</strong><br>
-        0812-3456-7890
-      </p>
-    </div>
-
-    <!-- Kolom Area tetap -->
-    <div class="footer-column">
-      <h3>Area</h3>
-      <div class="area-box">
-        <img src="https://flagcdn.com/w20/id.png" class="flag" alt="ID">
-        Indonesia 🌐
+  
+  <footer class="mt-auto bg-dark text-white">
+    <div class="container py-4">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <h5>Butuh Bantuan?</h5>
+          <p><strong>Telp:</strong><br>0812-3456-7890</p>
+        </div>
+        <div class="col-md-6 mb-3">
+          <h5>Area</h5>
+          <div class="d-flex align-items-center">
+            <img src="https://flagcdn.com/w20/id.png" class="me-2" alt="ID"> Indonesia 🌐
+          </div>
+        </div>
+      </div>
+      <hr class="border-secondary">
+      <div class="text-center small">
+        © Hak Cipta Coda Payments &nbsp;•&nbsp;
+        Pemasaran dan Kemitraan &nbsp;•&nbsp;
+        Untuk Penerbit Game &nbsp;•&nbsp;
+        Syarat &amp; Ketentuan &nbsp;•&nbsp;
+        Kebijakan Privasi &nbsp;•&nbsp;
+        Bounty bug &nbsp;•&nbsp;
+        Menjadi distributor
       </div>
     </div>
-  </div>
+  </footer>
 
-  <div class="footer-bottom">
-    © Hak Cipta Coda Payments &nbsp;•&nbsp;
-    Pemasaran dan Kemitraan &nbsp;•&nbsp;
-    Untuk Penerbit Game &nbsp;•&nbsp;
-    Syarat &amp; Ketentuan &nbsp;•&nbsp;
-    Kebijakan Privasi &nbsp;•&nbsp;
-    Bounty bug &nbsp;•&nbsp;
-    Menjadi distributor
-  </div>
-  <!-- ===== End Footer ===== -->
-
-  <script src="<?= base_url('js/bootstrap.bundle.min.js') ?>"></script>
+ 
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-…"
+    crossorigin="anonymous"
+  ></script>
+ 
   <script src="<?= base_url('js/script.js') ?>"></script>
 </body>
 </html>

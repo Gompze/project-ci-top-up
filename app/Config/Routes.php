@@ -40,12 +40,12 @@ $routes->get('login',    'AuthController::login');
 $routes->post('login',   'AuthController::processLogin');
 $routes->get('logout',   'AuthController::logout');
 
-// Route Top Up
+
 $routes->get('topup',                 'TopupController::purchase');
+$routes->get('topup/purchase', 'TopupController::purchase');
 $routes->post('topup/processPurchase',        'TopupController::processPurchase');
-$routes->get('topup/confirm-transfer','TopupController::confirmTransfer');  // ← PENTING
-$routes->get('topup/upload-bukti',       'TopupController::uploadBuktiForm');
-$routes->post('topup/upload-bukti/process','TopupController::uploadBuktiProcess');
+$routes->get('topup/confirm-transfer','TopupController::confirmTransfer'); 
+
 
 
 
@@ -56,8 +56,15 @@ $routes->post('cart/update/(:num)', 'CartController::update/$1');
 $routes->get('cart/checkout',    'CartController::checkout');
 
 
+$routes->post('transactions/create',         'TransactionController::create');
 $routes->get('transactions',         'TransactionController::index');
 $routes->get('transaction/detail/(:num)', 'TransactionController::detail/$1');
+
+
+
+
+$routes->get('logout', 'AuthController::logout');
+
 
 
 

@@ -26,11 +26,10 @@
         <?php endif; ?>
 
         <p class="mt-4">
-          Setelah transfer, silakan unggah bukti transfer melalui tombol di bawah:
         </p>
-        <a href="<?= base_url('topup/upload-bukti') ?>" class="btn btn-primary">
-          Upload Bukti Transfer
-        </a>
+        <form action="/transactions/create" method="post">
+          <button type="submit" class="btn btn-primary">Lanjut!</button>
+        </form>
       </div>
     </div>
   </div>
